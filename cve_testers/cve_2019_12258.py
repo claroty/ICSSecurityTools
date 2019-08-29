@@ -62,11 +62,11 @@ class CveTester(object):
 			s.connect((dst_ip, dst_port))
 		except socket.timeout:
 			if self.verbose >= VERBOSE_NORMAL:
-				print('Log: unable to establish a connection to host {} port {}'.format(dst_ip, dst_port))
+				print('Log: Unable to establish a connection to host {} port {}'.format(dst_ip, dst_port))
 			return None
 		except ConnectionRefusedError:
 			if self.verbose >= VERBOSE_NORMAL:
-				print("Log: the host {} has actively refused a connection to port {}".format(dst_ip, dst_port))
+				print("Log: The host {} has actively refused a connection to port {}".format(dst_ip, dst_port))
 			return None
 		return s
 
@@ -88,7 +88,7 @@ class CveTester(object):
 		if not interface:
 			interface = get_iface(s)
 			if not interface:  # failed to get an interface
-				print('error: failed to get the correct interface for the host {}'.format(ip))
+				print('Error: Failed to get the correct interface for the host {}'.format(ip))
 				return False
 
 		out = self.try_dos(s, interface)
@@ -106,13 +106,13 @@ class CveTester(object):
 
 	def is_ip_vulnerable_wrapper(self, ip, interface):
 		if self.verbose >= VERBOSE_NORMAL:
-			print('checking ip {}...'.format(ip))
+			print('Checking ip {}...'.format(ip))
 		for tcp_port in self.tcp_ports:
 			if self.is_ip_vulnerable(ip, tcp_port, interface):
-				print('the host {} is vulnerable to  CVE-2019-12258'.format(ip))
+				print('The host {} is vulnerable to  CVE-2019-12258'.format(ip))
 				return
 		if self.verbose > VERBOSE_NONE:
-			print('the host {} is not vulnerable to  CVE-2019-12258'.format(ip))
+			print('The host {} is not vulnerable to  CVE-2019-12258'.format(ip))
 
 	def is_ip_vulnerable_ip_range(self, interface):
 		for ip in iter_iprange(self.ip, self.ip_end):
@@ -128,7 +128,7 @@ class CveTester(object):
 def main():
 	if sys.version_info[0] < 3:
 		raise Exception("Python 3 or a more recent version is required.")
-	parser = argparse.ArgumentParser(description="script for testing whether PLCs are vulnerable to  CVE-2019-12258")
+	parser = argparse.ArgumentParser(description="Script for testing whether PLCs are vulnerable to  CVE-2019-12258")
 	parser.add_argument('-ip', '--ip', help='IP to test, or start of ip range', required=True)
 	port_group = parser.add_mutually_exclusive_group(required=True)
 	port_group.add_argument('-p', '--port', help='port to use.', type=int)
