@@ -17,7 +17,7 @@ DEFAULT_PORTS = [80, 443, 502, 44818]
 
 """
 This script is used to check whether a machine is vulnerable to CVE-2019-12258, one of the urgent11 vulnerabilities
-published in August 2019 (https://nvd.nist.gov/vuln/detail/CVE-2019-12258).
+published in August 2019 by Armis Security (https://armis.com/urgent11, https://nvd.nist.gov/vuln/detail/CVE-2019-12258).
 CVE-2019-12258 is a relatively simple vulnerability, which allows DoS attacks on an existing tcp session without
 prior knowledge of the session sequence numbers.
 The check implemented here works as follows:
@@ -109,10 +109,10 @@ class CveTester(object):
 			print('Checking ip {}...'.format(ip))
 		for tcp_port in self.tcp_ports:
 			if self.is_ip_vulnerable(ip, tcp_port, interface):
-				print('The host {} is vulnerable to  CVE-2019-12258'.format(ip))
+				print('The host {} is vulnerable to CVE-2019-12258'.format(ip))
 				return
 		if self.verbose > VERBOSE_NONE:
-			print('The host {} is not vulnerable to  CVE-2019-12258'.format(ip))
+			print('The host {} is not vulnerable to CVE-2019-12258'.format(ip))
 
 	def is_ip_vulnerable_ip_range(self, interface):
 		for ip in iter_iprange(self.ip, self.ip_end):
@@ -128,7 +128,7 @@ class CveTester(object):
 def main():
 	if sys.version_info[0] < 3:
 		raise Exception("Python 3 or a more recent version is required.")
-	parser = argparse.ArgumentParser(description="Script for testing whether PLCs are vulnerable to  CVE-2019-12258")
+	parser = argparse.ArgumentParser(description="Script for testing whether PLCs are vulnerable to CVE-2019-12258")
 	parser.add_argument('-ip', '--ip', help='IP to test, or start of ip range', required=True)
 	port_group = parser.add_mutually_exclusive_group(required=True)
 	port_group.add_argument('-p', '--port', help='port to use.', type=int)
