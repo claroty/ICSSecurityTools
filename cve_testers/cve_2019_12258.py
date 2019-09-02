@@ -15,6 +15,10 @@ VERBOSE_HIGH = 2
 
 DEFAULT_PORTS = [80, 443, 502, 44818]
 
+ERR_ASSET_VULNERABLE = 1
+ERR_CON_REFUSED = 2
+ERR_CON_TIMED_OUT = 3
+
 """
 This script is used to check whether a machine is vulnerable to CVE-2019-12258, one of the urgent11 vulnerabilities
 published in August 2019 (https://nvd.nist.gov/vuln/detail/CVE-2019-12258).
@@ -61,13 +65,13 @@ class CveTester(object):
 		try:
 			s.connect((dst_ip, dst_port))
 		except socket.timeout:
-			if self.verbose >= VERBOSE_NORMAL:
+			if self.verbose > VERBOSE_NORMAL:
 				print('Log: Unable to establish a connection to host {} port {}'.format(dst_ip, dst_port))
-			return None
+			return ERR_CON_TIMED_OUT
 		except ConnectionRefusedError:
 			if self.verbose >= VERBOSE_NORMAL:
 				print("Log: The host {} has actively refused a connection to port {}".format(dst_ip, dst_port))
-			return None
+			return ERR_CON_REFUSED
 		return s
 
 	# try to execute DoS using CVE-12258
@@ -82,8 +86,8 @@ class CveTester(object):
 
 	def is_ip_vulnerable(self, ip, tcp_port, interface=None):
 		s = self.open_socket(ip, tcp_port)
-		if not s:
-			return False
+		if s in [ERR_CON_REFUSED, ERR_CON_TIMED_OUT]:
+			return s
 
 		if not interface:
 			interface = get_iface(s)
@@ -107,12 +111,18 @@ class CveTester(object):
 	def is_ip_vulnerable_wrapper(self, ip, interface):
 		if self.verbose >= VERBOSE_NORMAL:
 			print('Checking ip {}...'.format(ip))
+		asset_found = False
 		for tcp_port in self.tcp_ports:
-			if self.is_ip_vulnerable(ip, tcp_port, interface):
+			retval = self.is_ip_vulnerable(ip, tcp_port, interface)
+			if retval == ERR_ASSET_VULNERABLE:
 				print('The host {} is vulnerable to  CVE-2019-12258'.format(ip))
 				return
-		if self.verbose > VERBOSE_NONE:
+			elif retval != ERR_CON_TIMED_OUT:
+				asset_found = True
+		if self.verbose > VERBOSE_NONE and asset_found:
 			print('The host {} is not vulnerable to  CVE-2019-12258'.format(ip))
+		elif self.verbose > VERBOSE_NONE:
+			print('Could not establish a connection to the host {}'.format(ip))
 
 	def is_ip_vulnerable_ip_range(self, interface):
 		for ip in iter_iprange(self.ip, self.ip_end):
