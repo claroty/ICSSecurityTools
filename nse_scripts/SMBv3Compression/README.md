@@ -18,6 +18,13 @@ Currently it's a standalone NSE script with a patched lua file but we will PR th
 
 Search for `SMBv3 Compression LZTN1 (Negotiation Context)`.
 
+
+
+## Disable SMBv3 compression
+You can disable SMBv3 compression with the PowerShell command below:
+
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" DisableCompression -Type DWORD -Value 1 -Force
+
 ## License
 Apache License 2.0. See the parent directory.
 
